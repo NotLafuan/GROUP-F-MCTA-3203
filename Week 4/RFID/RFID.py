@@ -11,5 +11,3 @@ while True:
         arduino.write('f'.encode())
     elif arduino_data == '2D 83 06 31':
         arduino.write('a'.encode())
-
-

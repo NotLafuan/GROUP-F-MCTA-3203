@@ -1,6 +1,4 @@
 import serial
-import time
-from serial.serialutil import SerialException
 """
 Define the serial port and baud rate
 (adjust the port as per your Arduino)
@@ -14,7 +12,7 @@ try:
         angle = int(angle)
         if 0 <= angle <= 180:
             # Send the servo’s angle to the Arduino
-            data=str(angle)+"A0"
+            data=str(angle)+"A"
             ser.write(str(data).encode()) 
         else:
             print("Angle must be between 0 and 180 degrees.")

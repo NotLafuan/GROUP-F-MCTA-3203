@@ -24,3 +24,4 @@ finally:
     ser.close() # Close the serial connection
 print("Serial connection closed.")
 
+    

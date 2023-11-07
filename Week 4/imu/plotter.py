@@ -65,9 +65,11 @@ for x,y in zip(xx_lst,xy_lst):
     cum_x.append(x)
     cum_y.append(y)
     plt.clf()
+    plt.axis('equal')
     plt.scatter(cum_x, cum_y)
     plt.pause(0.000001)
 
+plt.axis('equal')
 plt.scatter(xx_lst, xy_lst)
 
 plt.show()

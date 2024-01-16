@@ -9,13 +9,13 @@ Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 String modes[] = {"Delicate", "Normal", "Quickwash", "Heavy Duty", "Rinse & Spin", "Bedding"};
 int modeTimers[] = {4 * 60, 2 * 60, 20, 5 * 60, 65, 5 * 60};
 int modeSelector = 0;
-enum runningModes
+enum statuses
 {
   Stop,
   Running,
   Pause
 };
-runningModes runningMode; // 0=stop, 1=stop, 2=pause
+statuses status; // 0=stop, 1=stop, 2=pause
 
 bool button1Released = true;
 bool button2Released = true;
@@ -34,7 +34,8 @@ void serialSend();
 
 void setup()
 {
-  runningMode = Stop;
+  Serial.begin(9600);
+  status = Stop;
   startTime = millis();
 
   pinMode(BUTTON1, INPUT);
@@ -57,6 +58,8 @@ void loop()
 
 void potUpdate()
 {
+  if (status != Stop)
+    return;
   int pot = analogRead(POT);
   modeSelector = pot > 170 * 0 ? 0 : modeSelector;
   modeSelector = pot > 170 * 1 ? 1 : modeSelector;
@@ -74,25 +77,25 @@ void buttonUpdate()
   if (button1 && button1Released)
   {
     button1Released = false;
-    if (runningMode == Running || runningMode == Pause)
+    if (status == Running || status == Pause)
     {
-      runningMode = Stop;
+      status = Stop;
     }
-    else if (runningMode == Stop)
+    else if (status == Stop)
     {
-      runningMode = Running;
+      status = Running;
     }
   }
   if (button2 && button2Released)
   {
     button2Released = false;
-    if (runningMode == Running)
+    if (status == Running)
     {
-      runningMode = Pause;
+      status = Pause;
     }
-    else if (runningMode == Pause)
+    else if (status == Pause)
     {
-      runningMode = Running;
+      status = Running;
     }
   }
 
@@ -112,18 +115,18 @@ void displayUpdate()
   display.clearDisplay();
   display.setTextColor(BLACK, WHITE);
   display.setCursor(12, 28);
-  if (runningMode == Stop)
+  if (status == Stop)
   {
     display.println("START");
     displayModes();
     timer = modeTimers[modeSelector];
   }
-  else if (runningMode == Running)
+  else if (status == Running)
   {
     display.println("STOP");
     displayTime();
   }
-  else if (runningMode == Pause)
+  else if (status == Pause)
   {
     display.println("PAUSE");
     displayTime();
@@ -181,14 +184,18 @@ void timerUpdate()
   {
     if (button3Released)
       startTime = millis();
-    if (runningMode == Running)
+    if (status == Running)
       timer--;
     if (timer <= 0)
-      runningMode = Stop;
+      status = Stop;
   }
 }
 
 void serialSend()
 {
-  Serial.println(timer);
+  Serial.print(status);
+  Serial.print(" ");
+  Serial.print(timer);
+  Serial.print(" ");
+  Serial.println(modes[modeSelector]);
 }

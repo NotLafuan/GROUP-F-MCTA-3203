@@ -11,7 +11,10 @@ int timer = 6000;
 int prevTimer = 0;
 bool update = false;
 
-char water, load, card;
+bool motorDir = false;
+unsigned long motorDirStart = 0;
+
+char water, load, card, motor;
 char prevWater, prevLoad, prevCard;
 int in1 = 2;
 int in2 = 3;
@@ -54,6 +57,23 @@ void loop()
       sevseg.setNumber(timer, 1);
     }
   }
+
+  if (motor == 'g')
+  {
+    if (!wash && water == 'f')
+    {
+      wash = true;
+      motorTimer = millis() + 6000;
+    }
+    if (water == 'e')
+      wash = false;
+  }
+  else
+  {
+    wash = false;
+    timer = 6000;
+  }
+
   if (card == 'a')
   {
     if (update)
@@ -72,6 +92,7 @@ void loop()
         lcd.setCursor(0, 0);
         lcd.print("Overload!");
       }
+      wash = false;
       digitalWrite(RED, HIGH);
       digitalWrite(BUZZER, HIGH);
     }
@@ -79,21 +100,6 @@ void loop()
     {
       digitalWrite(RED, LOW);
       digitalWrite(BUZZER, LOW);
-      if (water == 'f')
-      {
-        if (!wash)
-        {
-          wash = true;
-          motorTimer = millis() + 6000;
-        }
-      }
-
-      if (water == 'e')
-      {
-        stopMotor();
-        wash = false;
-        timer = 6000;
-      }
     }
   }
   if (card == 'n' && update)
@@ -104,41 +110,37 @@ void loop()
     lcd.setCursor(0, 1);
     lcd.print("Authorized");
   }
-  if (update)
-  {
-    Serial.print(water);
-    Serial.print("\t");
-    Serial.print(load);
-    Serial.print("\t");
-    Serial.println(card);
-  }
-  if (timer <= 0)
-  {
-    directionControl();
-  }
+
+  if (timer <= 0 && wash)
+    spinMotor();
+  else
+    stopMotor();
+
   detectUpdate();
   sevseg.refreshDisplay();
 }
 
-void directionControl()
+void spinMotor()
 {
-  // Turn on motor A
-  analogWrite(in1, 100);
-  digitalWrite(in2, LOW);
-  delay(2000);
+  if (millis() - motorDirStart >= 3000)
+  {
+    if (motorDir)
+      motorDir = false;
+    else
+      motorDir = true;
+    motorDirStart = millis();
+  }
 
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
-  delay(1000);
-
-  // Now change motor directions
-  digitalWrite(in1, LOW);
-  analogWrite(in2, 100);
-  delay(2000);
-
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
-  delay(1000);
+  if (motorDir)
+  {
+    analogWrite(in1, 100);
+    digitalWrite(in2, LOW);
+  }
+  else
+  {
+    digitalWrite(in1, LOW);
+    analogWrite(in2, 100);
+  }
 }
 
 void stopMotor()
@@ -152,6 +154,7 @@ void receiveEvent(int bytes)
   load = Wire.read();
   water = Wire.read();
   card = Wire.read();
+  motor = Wire.read();
 }
 
 void detectUpdate()

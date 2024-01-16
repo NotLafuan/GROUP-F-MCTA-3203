@@ -24,6 +24,8 @@ bool button3Released = true;
 int timer;
 unsigned long startTime;
 
+bool authorized = true;
+
 void potUpdate();
 void buttonUpdate();
 void displayUpdate();
@@ -31,6 +33,8 @@ void displayTime();
 void displayModes();
 void timerUpdate();
 void serialSend();
+bool checkUpdate();
+void displayNotAuthorized();
 
 void setup()
 {
@@ -49,10 +53,26 @@ void setup()
 
 void loop()
 {
-  potUpdate();
-  buttonUpdate();
-  displayUpdate();
-  timerUpdate();
+  if (Serial.available())
+  {
+    char data = Serial.read();
+    if (data == 'a')
+      authorized = true;
+    else if (data == 'n')
+      authorized = false;
+  }
+
+  if (authorized)
+  {
+    potUpdate();
+    buttonUpdate();
+    displayUpdate();
+    timerUpdate();
+  }
+  else
+  {
+    displayNotAuthorized();
+  }
   serialSend();
 }
 
@@ -198,4 +218,16 @@ void serialSend()
   Serial.print(timer);
   Serial.print(" ");
   Serial.println(modes[modeSelector]);
+}
+
+void displayNotAuthorized()
+{
+  display.clearDisplay();
+  display.setTextColor(WHITE, BLACK);
+  display.setCursor(15, 10);
+  display.setTextSize(2);
+  display.println("Card Not");
+  display.print("Authorized");
+  display.setTextSize(1);
+  display.display();
 }

@@ -10,10 +10,14 @@ byte nuidPICC[4];                        // Init array that will store new NUID
 byte uid1[4] = {0x23, 0x0C, 0xC3, 0x10}; // authorize card1
 byte uid2[4] = {0x23, 0x1F, 0xE6, 0x0D}; // authorize card2
 bool verify;
+bool motor = false;
 
 char outgoingByteIR;
 char outgoingByteWaterLevel;
 char outgoingByteCard;
+char outgoingByteMotor;
+
+int sendData = 0;
 
 void setup()
 {
@@ -35,8 +39,8 @@ void loop()
         rfid.PICC_ReadCardSerial();
         for (byte i = 0; i < 4; i++)
             nuidPICC[i] = rfid.uid.uidByte[i];
-        printHex(rfid.uid.uidByte, rfid.uid.size);
-        Serial.println();
+        // printHex(rfid.uid.uidByte, rfid.uid.size);
+        // Serial.println();
 
         for (size_t i = 0; i < 4; i++)
         {
@@ -48,6 +52,15 @@ void loop()
                 break;
             }
         }
+    }
+
+    if (Serial.available())
+    {
+        char data = Serial.read();
+        if (data == 'g')
+            motor = true;
+        else if (data == 'h')
+            motor = false;
     }
 
     if (verify)
@@ -65,19 +78,28 @@ void loop()
     else
         outgoingByteWaterLevel = 'e';
 
-    delay(500);
+    if (motor)
+        outgoingByteMotor = 'g';
+    else
+        outgoingByteMotor = 'h';
+
     Serial.print(outgoingByteIR);
-    Serial.print("\t");
+    Serial.print(" ");
     Serial.print(outgoingByteWaterLevel);
-    Serial.print("\t");
+    Serial.print(" ");
     Serial.print(outgoingByteCard);
-    Serial.print("\t");
+    Serial.print(" ");
     Serial.println(analogRead(WATER_LEVEL_PIN));
-    Wire.beginTransmission(9);
-    Wire.write(outgoingByteIR);
-    Wire.write(outgoingByteWaterLevel);
-    Wire.write(outgoingByteCard);
-    Wire.endTransmission(); // end transmission
+    if (millis() - sendData >= 500)
+    {
+        sendData = millis();
+        Wire.beginTransmission(9);
+        Wire.write(outgoingByteIR);
+        Wire.write(outgoingByteWaterLevel);
+        Wire.write(outgoingByteCard);
+        Wire.write(outgoingByteMotor);
+        Wire.endTransmission();
+    }
 }
 
 void printHex(byte *buffer, byte bufferSize)

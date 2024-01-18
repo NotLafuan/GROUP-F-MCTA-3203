@@ -73,7 +73,7 @@ void loop()
     else
         outgoingByteIR = 'k';
 
-    if (analogRead(WATER_LEVEL_PIN) >= 100)
+    if (analogRead(WATER_LEVEL_PIN) >= 250)
         outgoingByteWaterLevel = 'f';
     else
         outgoingByteWaterLevel = 'e';

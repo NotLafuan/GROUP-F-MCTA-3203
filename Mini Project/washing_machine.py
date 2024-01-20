@@ -63,29 +63,3 @@ if __name__ == '__main__':
         print(e)
     thread_stop = True
     print('Done')
-    # with serial.Serial('COM16', 9600) as ser_control, \
-    #         serial.Serial('COM24', 9600) as ser_master:
-    #     while True:
-    #         try:
-    #             # print('data_control')
-    #             data_control = ser_control.readline().decode().strip()
-    #             status, timer, *mode = data_control.split()
-    #             mode = ' '.join(mode)
-    #             post = {"status": status, "timer": timer, "mode": mode}
-    #             requests.post('http://127.0.0.1:5000/send_data', json=post)
-    #             # if status == 1:
-    #             #     ser_master.write('g'.encode())
-    #             # else:
-    #             #     ser_master.write('h'.encode())
-    #             # print('\r', status, timer, mode)
-
-    #             # print('data_master')
-    #             data_master = ser_master.readline().decode().strip()
-    #             ir, water, card, level = data_master.split()
-    #             ser_control.write(card.encode())
-
-    #             print(data_control, data_master)
-    #         except ValueError:
-    #             print('ValueError', data_control, data_master)
-    #         except KeyboardInterrupt:
-    #             break
